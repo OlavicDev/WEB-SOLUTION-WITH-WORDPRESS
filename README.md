@@ -22,5 +22,11 @@ Ec2 (where the wordpress will be installed) will serve as the web sever(applicat
 another Ec2 as the database(data tier)
 
 ## Step-1 Prepare a Web Server
+1. Launch a RedHat EC2 instance that serve as Web Server. Create 3 volumes in the same AZ as the web server ec2 each of 10GB and attache all 3 volumes one by one to the web server.
+Instance detail Instance detail.
+
+![image](https://github.com/user-attachments/assets/2c6f6b93-da42-4ec8-b408-afe4577129df)
+![image](https://github.com/user-attachments/assets/a5baa63c-6b07-4568-8323-1f4d4e1b475e)
+
 
 
