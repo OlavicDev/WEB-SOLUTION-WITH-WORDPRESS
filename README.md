@@ -140,3 +140,13 @@ sudo blkid   # To fetch the UUID
 ```
 sudo vi /etc/fstab
 ```
+![image](https://github.com/user-attachments/assets/deb76535-e4bd-45b2-bf79-6c3c8e3d5780)
+
+16. Test the configuration and reload daemon. Verify the setup
+```
+sudo mount -a  
+
+sudo systemctl daemon-reload
+
+df -h  
+```
