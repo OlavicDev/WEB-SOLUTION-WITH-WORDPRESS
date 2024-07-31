@@ -273,6 +273,8 @@ df -h
      ```
      sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm -y
      ```
+     ![image](https://github.com/user-attachments/assets/496eb9d0-b6aa-4825-b589-af5ad91c959c)
+
    - **List PHP Modules**
      ```
      sudo dnf module list php
@@ -282,27 +284,33 @@ df -h
      sudo dnf module reset php -y
      ```
    - **Enable PHP 8.2 Module**
-     ```sh
+     ```
      sudo dnf module enable php:remi-8.2 -y
      ```
+     ![image](https://github.com/user-attachments/assets/c947fd1e-c2c0-4fa9-bb96-1ca35283b29d)
+
    - **Install PHP and Associated Modules**
-     ```sh
+     ```
      sudo dnf install php php-opcache php-gd php-curl php-mysqlnd -y
      ```
    - **Verify PHP Version**
-     ```sh
+     ```
      php -v
      ```
+     ![image](https://github.com/user-attachments/assets/71bf3613-b39b-4ba4-8200-15ab393bde6c)
+
    - **Start, Enable, and Check PHP-FPM**
-     ```sh
+     ```
      sudo systemctl start php-fpm
      sudo systemctl enable php-fpm
      sudo systemctl status php-fpm
      ```
+     ![image](https://github.com/user-attachments/assets/ae552709-aa9e-4f2a-a6e5-a801c45a0515)
+
 
 4. **Configure SELinux Policies**
    - **Set Permissions**
-     ```sh
+     ```
      sudo chown -R apache:apache /var/www/html
      sudo chcon -t httpd_sys_rw_content_t /var/www/html -R
      sudo setsebool -P httpd_execmem 1
@@ -310,19 +318,19 @@ df -h
      sudo setsebool -P httpd_can_network_connect_db=1
      ```
    - **Restart Apache**
-     ```sh
+     ```
      sudo systemctl restart httpd
      ```
 
 5. **Download and Setup WordPress**
    - **Download WordPress**
-     ```sh
+     ```
      sudo mkdir wordpress && cd wordpress
      sudo wget http://wordpress.org/latest.tar.gz
      sudo tar xzvf latest.tar.gz
      ```
    - **Configure WordPress**
-     ```sh
+     ```
      cd wordpress/
      sudo cp wp-config-sample.php wp-config.php
      cd ..
@@ -331,66 +339,78 @@ df -h
 
 6. **Install MySQL on DB Server EC2**
    - **Update EC2**
-     ```sh
+     ```
      sudo yum update -y
      ```
    - **Install MySQL Server**
-     ```sh
+     ```
      sudo yum install mysql-server -y
      ```
+     ![image](https://github.com/user-attachments/assets/219579dd-29d9-4c8a-b81f-02fbe041924d)
+
    - **Start, Enable, and Check MySQL**
-     ```sh
+     ```
      sudo systemctl start mysqld
      sudo systemctl enable mysqld
      sudo systemctl status mysqld
      ```
+     ![image](https://github.com/user-attachments/assets/fd586225-2f24-403b-8b35-227d0b2cc4f0)
+
 
 7. **Configure Database for WordPress**
    - **Run MySQL Secure Installation**
-     ```sh
+     ```
      sudo mysql_secure_installation
      ```
+     ![image](https://github.com/user-attachments/assets/8f5c92c3-0d59-4238-9142-f9da3cb5cd9a)
+
    - **Create Database and User**
-     ```sh
+     ```
      sudo mysql -u root -p
      CREATE DATABASE wordpress_db;
-     CREATE USER 'wordpress'@'172.31.31.27' IDENTIFIED BY 'Admin123$';
-     GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress'@'172.31.31.27';
+     CREATE USER 'wordpress'@'172.31.46.118' IDENTIFIED BY 'Admin123$';
+     GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress'@'172.31.46.118';
      FLUSH PRIVILEGES;
      exit;
      ```
    - **Set MySQL Bind Address**
-     ```sh
+     ```
      sudo vi /etc/my.cnf
      ```
-     Add `bind-address = 172.31.31.27` and restart MySQL:
-     ```sh
+     Add `bind-address = 172.31.46.118` and restart MySQL:
+     ```
      sudo systemctl restart mysqld
      ```
 
 8. **Configure WordPress to Connect to Remote Database**
    - **Open MySQL Port 3306 on DB Server EC2**
+     ![image](https://github.com/user-attachments/assets/f52fd026-30bd-480d-b666-f04593e3ea1e)
+
    - **Install MySQL Server on Web Server EC2**
-     ```sh
+     connect to WEB Server instance  
+     ```
      sudo yum install mysql-server -y
      sudo systemctl start mysqld
      sudo systemctl enable mysqld
      sudo systemctl status mysqld
      ```
+     ![image](https://github.com/user-attachments/assets/5438a6d9-8d75-4db7-910b-786ac7c3bf01)
+
+     
    - **Edit wp-config.php**
-     ```sh
+     ```
      cd /var/www/html
      sudo vi wp-config.php
      sudo systemctl restart httpd
      ```
 
    - **Disable Apache Default Page**
-     ```sh
+     ```
      sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup
      ```
    - **Connect to DB Server from Web Server**
-     ```sh
-     sudo mysql -h 172.31.30.142 -u wordpress -p
+     ```
+     sudo mysql -h 172.31.46.118 -u wordpress -p
      show databases;
      exit;
      ```
