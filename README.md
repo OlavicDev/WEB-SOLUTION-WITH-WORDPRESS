@@ -414,5 +414,9 @@ df -h
      show databases;
      exit;
      ```
+     ![image](https://github.com/user-attachments/assets/f284206c-818f-457e-b2ee-b64af7c97384)
+     ![image](https://github.com/user-attachments/assets/88bfc40f-6e1e-41fe-98dd-89ea26b37dc5)
+
+
 
 Finally, access the web page using the Web Server's public IP address and complete the WordPress installation in the browser. At this point, WordPress should be up and running.
