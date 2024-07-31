@@ -246,3 +246,153 @@ df -h
     df -h   # Verify the setup
     ```
     ![image](https://github.com/user-attachments/assets/5843fed5-671e-4b1d-ba8a-0d2cc3481599)
+    
+
+## Step 3 - Install WordPress on the Web Server EC2
+
+1. **Update the Repository**
+   ```
+   sudo yum -y update
+   ```
+   ![image](https://github.com/user-attachments/assets/9230e76f-3d9d-4662-a5cb-30650f2b3515)
+
+
+2. **Install wget, Apache, and Dependencies**
+   ```
+   sudo yum install wget httpd php-fpm php-json -y
+   ```
+   ![image](https://github.com/user-attachments/assets/fc2e1aa9-9716-45bf-98a8-af34126809fa)
+
+
+3. **Install PHP and Dependencies via Remi Repository**
+   - **Install EPEL Repository**
+     ```
+     sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
+     ```
+   - **Install yum-utils and Enable Remi Repository**
+     ```
+     sudo dnf install dnf-utils http://rpms.remirepo.net/enterprise/remi-release-9.rpm -y
+     ```
+   - **List PHP Modules**
+     ```
+     sudo dnf module list php
+     ```
+   - **Reset PHP Modules**
+     ```
+     sudo dnf module reset php -y
+     ```
+   - **Enable PHP 8.2 Module**
+     ```sh
+     sudo dnf module enable php:remi-8.2 -y
+     ```
+   - **Install PHP and Associated Modules**
+     ```sh
+     sudo dnf install php php-opcache php-gd php-curl php-mysqlnd -y
+     ```
+   - **Verify PHP Version**
+     ```sh
+     php -v
+     ```
+   - **Start, Enable, and Check PHP-FPM**
+     ```sh
+     sudo systemctl start php-fpm
+     sudo systemctl enable php-fpm
+     sudo systemctl status php-fpm
+     ```
+
+4. **Configure SELinux Policies**
+   - **Set Permissions**
+     ```sh
+     sudo chown -R apache:apache /var/www/html
+     sudo chcon -t httpd_sys_rw_content_t /var/www/html -R
+     sudo setsebool -P httpd_execmem 1
+     sudo setsebool -P httpd_can_network_connect=1
+     sudo setsebool -P httpd_can_network_connect_db=1
+     ```
+   - **Restart Apache**
+     ```sh
+     sudo systemctl restart httpd
+     ```
+
+5. **Download and Setup WordPress**
+   - **Download WordPress**
+     ```sh
+     sudo mkdir wordpress && cd wordpress
+     sudo wget http://wordpress.org/latest.tar.gz
+     sudo tar xzvf latest.tar.gz
+     ```
+   - **Configure WordPress**
+     ```sh
+     cd wordpress/
+     sudo cp wp-config-sample.php wp-config.php
+     cd ..
+     sudo cp -R wordpress/. /var/www/html/
+     ```
+
+6. **Install MySQL on DB Server EC2**
+   - **Update EC2**
+     ```sh
+     sudo yum update -y
+     ```
+   - **Install MySQL Server**
+     ```sh
+     sudo yum install mysql-server -y
+     ```
+   - **Start, Enable, and Check MySQL**
+     ```sh
+     sudo systemctl start mysqld
+     sudo systemctl enable mysqld
+     sudo systemctl status mysqld
+     ```
+
+7. **Configure Database for WordPress**
+   - **Run MySQL Secure Installation**
+     ```sh
+     sudo mysql_secure_installation
+     ```
+   - **Create Database and User**
+     ```sh
+     sudo mysql -u root -p
+     CREATE DATABASE wordpress_db;
+     CREATE USER 'wordpress'@'172.31.31.27' IDENTIFIED BY 'Admin123$';
+     GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress'@'172.31.31.27';
+     FLUSH PRIVILEGES;
+     exit;
+     ```
+   - **Set MySQL Bind Address**
+     ```sh
+     sudo vi /etc/my.cnf
+     ```
+     Add `bind-address = 172.31.31.27` and restart MySQL:
+     ```sh
+     sudo systemctl restart mysqld
+     ```
+
+8. **Configure WordPress to Connect to Remote Database**
+   - **Open MySQL Port 3306 on DB Server EC2**
+   - **Install MySQL Server on Web Server EC2**
+     ```sh
+     sudo yum install mysql-server -y
+     sudo systemctl start mysqld
+     sudo systemctl enable mysqld
+     sudo systemctl status mysqld
+     ```
+   - **Edit wp-config.php**
+     ```sh
+     cd /var/www/html
+     sudo vi wp-config.php
+     sudo systemctl restart httpd
+     ```
+
+   - **Disable Apache Default Page**
+     ```sh
+     sudo mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf_backup
+     ```
+   - **Connect to DB Server from Web Server**
+     ```sh
+     sudo mysql -h 172.31.30.142 -u wordpress -p
+     show databases;
+     exit;
+     ```
+
+Finally, access the web page using the Web Server's public IP address and complete the WordPress installation in the browser. At this point, WordPress should be up and running.
