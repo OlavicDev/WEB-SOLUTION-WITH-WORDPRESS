@@ -150,3 +150,99 @@ sudo systemctl daemon-reload
 
 df -h  
 ```
+
+### Step 2 - Prepare the Database Server
+
+1. **Launch and Attach Volumes**:
+   Launch a second RedHat EC2 instance to serve as the DB Server. Repeat the initial setup steps from the Web Server, but instead of `apps-lv`, create `db-lv` and mount it to the `/db` directory. Create three 10GB volumes in the same AZ as the DB Server EC2 instance and attach all three volumes to the DB Server.
+
+2. **Connect to the Instance**:
+   Open the Linux terminal to begin configuration.
+   ```sh
+   ssh -i "ec2key.pem" ec2-user@54.219.132.188
+   ```
+
+3. **Inspect Block Devices**:
+   Use `lsblk` to inspect the block devices attached to the server. Their names will likely be `xvdf`, `xvdk`, and `xvdh`.
+   ```sh
+   lsblk
+   ```
+
+4. **Create Partitions**:
+   Use the `gdisk` utility to create a single partition on each of the three disks.
+   ```
+   sudo gdisk /dev/xvdf
+   sudo gdisk /dev/xvdk
+   sudo gdisk /dev/xvdh
+   ```
+   ![image](https://github.com/user-attachments/assets/4267a54f-c6a4-444e-876e-2a4cff20a4d4)
+
+
+5. **View Partitions**:
+   Use `lsblk` to view the newly configured partitions on each of the three disks.
+   ```
+   lsblk
+
+   ```
+
+6. **Install LVM**:
+   Install the `lvm2` package.
+   ```
+   sudo yum install lvm2 -y
+   ```
+
+7. **Configure Physical Volumes and Volume Group**:
+   Use `pvcreate` to mark each of the three disks as physical volumes (PVs) for LVM. Then, use `vgcreate` to add all three PVs to a volume group (VG) named `database-vg`. Verify the creation of the PVs and VG.
+   ```sh
+   sudo pvcreate /dev/xvdf1 /dev/xvdk1 /dev/xvdh1
+   sudo pvs
+   sudo vgcreate database-vg /dev/xvdf1 /dev/xvdk1 /dev/xvdh1
+   sudo vgs
+   ```
+   ![image](https://github.com/user-attachments/assets/9ed55551-0d9f-4dc2-b03a-84afbb97f9a0)
+
+
+8. **Create Logical Volume**:
+   Use `lvcreate` to create a logical volume named `db-lv` with 20GB of the PV size. Verify the creation of the logical volume.
+   ```
+   sudo lvcreate -n db-lv -L 20G database-vg
+   sudo lvs
+   ```
+
+9. **Format and Mount Logical Volume**:
+   Use `mkfs.ext4` to format the logical volume with the `ext4` filesystem, then mount it to `/db`.
+   ```
+   sudo mkfs.ext4 /dev/database-vg/db-lv
+   sudo mount /dev/database-vg/db-lv /db
+   ```
+   ![image](https://github.com/user-attachments/assets/aa7fb004-86aa-4b24-9526-add79018dbc2)
+
+
+10. **Update /etc/fstab**:
+    Update the `/etc/fstab` file to ensure the mount configuration persists after a restart.
+
+    - Get the UUID of the device:
+      ```
+      sudo blkid
+      ```
+    
+    - Update the `/etc/fstab` file:
+      ```
+      sudo vi /etc/fstab
+      ```
+
+      Add the following line (replace `your-uuid` with the actual UUID):
+      ```
+      UUID=your-uuid /db ext4 defaults 0 0
+      ```
+      ![image](https://github.com/user-attachments/assets/17b927a6-6dca-45cd-a403-2d30950a5a2f)
+
+
+11. **Test and Verify Configuration**:
+    Test the configuration and reload the daemon. Verify the setup.
+    ```
+    sudo mount -a   # Test the configuration
+    sudo systemctl daemon-reload
+    df -h   # Verify the setup
+    ```
+    ![image](https://github.com/user-attachments/assets/5843fed5-671e-4b1d-ba8a-0d2cc3481599)
